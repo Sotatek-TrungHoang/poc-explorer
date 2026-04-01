@@ -58,11 +58,19 @@ jobs:
           docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 --remove-orphans || true
 
           # Remove any leftover containers with conflicting names
-          for c in db backend frontend proxy redis-db; do
+          for c in db backend frontend proxy redis-db docker-compose-db-init-1; do
             docker rm -f "$c" 2>/dev/null || true
           done
 
-          # Prune unused networks to free port bindings
+          # Stop ALL docker containers using port 80 (from any compose project)
+          PORT80_CONTAINERS=$(docker ps -q --filter "publish=80" 2>/dev/null)
+          if [ -n "$PORT80_CONTAINERS" ]; then
+            echo "Stopping containers using port 80: $PORT80_CONTAINERS"
+            docker stop $PORT80_CONTAINERS || true
+            docker rm $PORT80_CONTAINERS || true
+          fi
+
+          # Prune unused networks
           docker network prune -f || true
 
       - name: Start containers
