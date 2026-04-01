@@ -30,88 +30,68 @@ env:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server
-    runs-on: ubuntu-latest
+    name: Deploy Blockscout
+    runs-on: self-hosted
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate compose config
+      - name: Sync code to deploy path
         run: |
-          cd docker-compose
-          docker compose -f ${{ env.COMPOSE_FILE }} config --quiet
+          set -e
+          echo "=== Syncing code to ${{ env.DEPLOY_PATH }} ==="
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
-          script_stop: true
-          script: |
-            set -e
-            echo "=== Deploying Blockscout to ${{ env.DEPLOY_PATH }} ==="
+          # Ensure deploy directory exists
+          sudo mkdir -p ${{ env.DEPLOY_PATH }}
+          sudo chown -R $USER:$USER ${{ env.DEPLOY_PATH }}
 
-            # Ensure deploy directory exists
-            sudo mkdir -p ${{ env.DEPLOY_PATH }}
-            sudo chown -R $USER:$USER ${{ env.DEPLOY_PATH }}
+          # Sync repo files to deploy path (exclude .git for clean copy)
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude 'docker-compose/blockscout-db-data' \
+            --exclude 'docker-compose/logs' \
+            --exclude 'docker-compose/dets' \
+            ${{ github.workspace }}/ ${{ env.DEPLOY_PATH }}/
 
-            # Clone or pull latest code
-            if [ -d "${{ env.DEPLOY_PATH }}/.git" ]; then
-              cd ${{ env.DEPLOY_PATH }}
-              git fetch origin main
-              git reset --hard origin/main
-            else
-              git clone --branch main --single-branch \
-                ${{ github.server_url }}/${{ github.repository }}.git \
-                ${{ env.DEPLOY_PATH }}
-              cd ${{ env.DEPLOY_PATH }}
-            fi
+      - name: Pull latest Docker images
+        run: |
+          cd ${{ env.DEPLOY_PATH }}/docker-compose
+          echo "=== Pulling latest images ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} pull
 
-            # Navigate to docker-compose directory
-            cd ${{ env.DEPLOY_PATH }}/docker-compose
+      - name: Deploy containers
+        run: |
+          cd ${{ env.DEPLOY_PATH }}/docker-compose
+          echo "=== Stopping existing containers ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 || true
 
-            # Pull latest images
-            echo "=== Pulling latest images ==="
-            docker compose -f ${{ env.COMPOSE_FILE }} pull
+          echo "=== Starting containers ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} up -d
 
-            # Stop existing containers gracefully
-            echo "=== Stopping existing containers ==="
-            docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 || true
+          echo "=== Waiting for services to start ==="
+          sleep 30
 
-            # Start containers
-            echo "=== Starting containers ==="
-            docker compose -f ${{ env.COMPOSE_FILE }} up -d
+          echo "=== Container status ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} ps
 
-            # Wait for services to be ready
-            echo "=== Waiting for services to start ==="
-            sleep 30
-
-            # Show container status
-            docker compose -f ${{ env.COMPOSE_FILE }} ps
-
-            echo "=== Deployment complete ==="
+      - name: Cleanup old Docker images
+        run: docker image prune -f || true
 
   health-check:
     name: Post-deploy Health Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: deploy
     steps:
-      - name: Wait for full startup
-        run: sleep 30
-
       - name: Check API health
         run: |
           MAX_RETRIES=10
           RETRY_DELAY=15
-          SERVER_HOST="${{ secrets.SERVER_HOST }}"
 
           for i in $(seq 1 $MAX_RETRIES); do
             echo "Health check attempt $i/$MAX_RETRIES..."
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
               --connect-timeout 10 --max-time 30 \
-              "http://${SERVER_HOST}/api/v2/stats" 2>/dev/null || echo "000")
+              "http://localhost/api/v2/stats" 2>/dev/null || echo "000")
 
             if [ "$HTTP_CODE" = "200" ]; then
               echo "API is healthy (HTTP 200)"
@@ -129,10 +109,9 @@ jobs:
 
       - name: Check frontend health
         run: |
-          SERVER_HOST="${{ secrets.SERVER_HOST }}"
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 --max-time 30 \
-            "http://${SERVER_HOST}" 2>/dev/null || echo "000")
+            "http://localhost" 2>/dev/null || echo "000")
 
           if [ "$HTTP_CODE" = "200" ]; then
             echo "Frontend is healthy (HTTP 200)"
@@ -141,12 +120,17 @@ jobs:
             exit 1
           fi
 
-      - name: Verify indexing is active
+      - name: Verify indexing status
         run: |
-          SERVER_HOST="${{ secrets.SERVER_HOST }}"
-          STATS=$(curl -s --max-time 30 "http://${SERVER_HOST}/api/v2/stats" 2>/dev/null)
+          STATS=$(curl -s --max-time 30 "http://localhost/api/v2/stats" 2>/dev/null)
 
-          if echo "$STATS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Blocks: {d.get(\"total_blocks\",\"N/A\")}, Addresses: {d.get(\"total_addresses\",\"N/A\")}')"; then
+          if echo "$STATS" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          print(f'Blocks: {d.get(\"total_blocks\", \"N/A\")}')
+          print(f'Addresses: {d.get(\"total_addresses\", \"N/A\")}')
+          print(f'Gas used today: {d.get(\"gas_used_today\", \"N/A\")}')
+          "; then
             echo "Indexer is active and returning data."
           else
             echo "WARNING: Could not verify indexer status"
