@@ -36,6 +36,15 @@ jobs:
       run:
         working-directory: docker-compose
     steps:
+      - name: Fix workspace permissions
+        working-directory: .
+        run: |
+          # Docker volumes create root-owned dirs that block checkout cleanup
+          if [ -d "${{ github.workspace }}/docker-compose/services/blockscout-db-data" ]; then
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              sh -c "chmod -R 777 /workspace/docker-compose/services/blockscout-db-data" || true
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Pull latest Docker images
