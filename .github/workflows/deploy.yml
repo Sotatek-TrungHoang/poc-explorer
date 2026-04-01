@@ -62,35 +62,6 @@ jobs:
             docker rm -f "$c" 2>/dev/null || true
           done
 
-          # Stop ALL docker containers using port 80 (from any compose project)
-          PORT80_CONTAINERS=$(docker ps -q --filter "publish=80" 2>/dev/null)
-          if [ -n "$PORT80_CONTAINERS" ]; then
-            echo "Stopping containers using port 80: $PORT80_CONTAINERS"
-            docker stop $PORT80_CONTAINERS || true
-            docker rm $PORT80_CONTAINERS || true
-          fi
-
-          # Kill any non-Docker process using port 80 (e.g. host nginx/apache)
-          PORT80_PID=$(ss -tlnp 'sport = :80' 2>/dev/null | grep -oP 'pid=\K[0-9]+' | head -1)
-          if [ -n "$PORT80_PID" ]; then
-            echo "Killing process $PORT80_PID using port 80"
-            kill -9 "$PORT80_PID" 2>/dev/null || true
-            sleep 2
-          fi
-
-          # Kill any lingering docker-proxy processes bound to port 80
-          PROXY_PIDS=$(pgrep -f "docker-proxy.*:80" 2>/dev/null || true)
-          if [ -n "$PROXY_PIDS" ]; then
-            echo "Killing lingering docker-proxy PIDs: $PROXY_PIDS"
-            kill -9 $PROXY_PIDS 2>/dev/null || true
-            sleep 2
-          fi
-
-          # Debug: show what's using port 80
-          echo "=== Port 80 status ==="
-          ss -tlnp 'sport = :80' 2>/dev/null || true
-          docker ps --filter "publish=80" 2>/dev/null || true
-
           # Prune unused networks
           docker network prune -f || true
 
@@ -123,7 +94,7 @@ jobs:
             echo "Health check attempt $i/$MAX_RETRIES..."
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
               --connect-timeout 10 --max-time 30 \
-              "http://localhost/api/v2/stats" 2>/dev/null || echo "000")
+              "http://localhost:8080/api/v2/stats" 2>/dev/null || echo "000")
 
             if [ "$HTTP_CODE" = "200" ]; then
               echo "API is healthy (HTTP 200)"
@@ -143,7 +114,7 @@ jobs:
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 --max-time 30 \
-            "http://localhost" 2>/dev/null || echo "000")
+            "http://localhost:8080" 2>/dev/null || echo "000")
 
           if [ "$HTTP_CODE" = "200" ]; then
             echo "Frontend is healthy (HTTP 200)"
@@ -154,7 +125,7 @@ jobs:
 
       - name: Verify indexing status
         run: |
-          STATS=$(curl -s --max-time 30 "http://localhost/api/v2/stats" 2>/dev/null)
+          STATS=$(curl -s --max-time 30 "http://localhost:8080/api/v2/stats" 2>/dev/null)
 
           if echo "$STATS" | python3 -c "
           import sys, json
