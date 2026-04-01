@@ -49,14 +49,12 @@ jobs:
 
       - name: Write production environment overrides
         run: |
-          echo "CORS_ALLOWED_ORIGIN=https://scan.poa-tracing.sotatek.works" > .env
-          echo "NEXT_PUBLIC_API_HOST=scan.poa-tracing.sotatek.works" >> .env
-          echo "NEXT_PUBLIC_API_PROTOCOL=https" >> .env
-          echo "NEXT_PUBLIC_STATS_API_HOST=https://scan.poa-tracing.sotatek.works:8080" >> .env
-          echo "NEXT_PUBLIC_APP_HOST=scan.poa-tracing.sotatek.works" >> .env
-          echo "NEXT_PUBLIC_APP_PROTOCOL=https" >> .env
-          echo "NEXT_PUBLIC_VISUALIZE_API_HOST=https://scan.poa-tracing.sotatek.works:8081" >> .env
-          echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=wss" >> .env
+          echo "CORS_ALLOWED_ORIGIN=${{ secrets.CORS_ALLOWED_ORIGIN }}" > .env
+          echo "NEXT_PUBLIC_API_HOST=${{ secrets.NEXT_PUBLIC_API_HOST }}" >> .env
+          echo "NEXT_PUBLIC_API_PROTOCOL=${{ secrets.NEXT_PUBLIC_API_PROTOCOL }}" >> .env
+          echo "NEXT_PUBLIC_APP_HOST=${{ secrets.NEXT_PUBLIC_APP_HOST }}" >> .env
+          echo "NEXT_PUBLIC_APP_PROTOCOL=${{ secrets.NEXT_PUBLIC_APP_PROTOCOL }}" >> .env
+          echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=${{ secrets.NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL }}" >> .env
 
       - name: Pull latest Docker images
         run: |
