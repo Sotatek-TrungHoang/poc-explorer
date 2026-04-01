@@ -43,7 +43,7 @@ jobs:
           echo "=== Pulling latest images ==="
           docker compose -f ${{ env.COMPOSE_FILE }} pull
 
-      - name: Deploy containers
+      - name: Stop and clean existing deployment
         run: |
           echo "=== Stopping existing containers ==="
           docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 --remove-orphans || true
@@ -53,6 +53,11 @@ jobs:
             docker rm -f "$c" 2>/dev/null || true
           done
 
+          # Prune unused networks to free port bindings
+          docker network prune -f || true
+
+      - name: Start containers
+        run: |
           echo "=== Starting containers ==="
           docker compose -f ${{ env.COMPOSE_FILE }} up -d
 
