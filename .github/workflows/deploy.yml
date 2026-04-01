@@ -165,6 +165,13 @@ jobs:
             MESSAGE="Deploy failed (deploy: ${{ needs.deploy.result }}, health-check: ${{ needs.health-check.result }})"
           fi
 
+          COMMIT_SHORT="${{ github.sha }}"
+          COMMIT_SHORT="${COMMIT_SHORT:0:7}"
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1 | sed 's/"/\\"/g')
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+
           curl -s -X POST "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"${ICON} *[MobiScan]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Compose: \`${{ env.COMPOSE_FILE }}\`\n• Triggered by: ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>\"}"
+            -d "{\"text\": \"${ICON} *[MobiScan]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Commit: \`${COMMIT_SHORT}\` — ${COMMIT_MSG}\n• Compose: \`${{ env.COMPOSE_FILE }}\`\n• Triggered by: ${{ github.actor }}\n• <${COMMIT_URL}|View commit> · <${RUN_URL}|View CI logs> · <${REPO_URL}|GitHub>\"}"
