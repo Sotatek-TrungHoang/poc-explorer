@@ -78,6 +78,19 @@ jobs:
             sleep 2
           fi
 
+          # Kill any lingering docker-proxy processes bound to port 80
+          PROXY_PIDS=$(pgrep -f "docker-proxy.*:80" 2>/dev/null || true)
+          if [ -n "$PROXY_PIDS" ]; then
+            echo "Killing lingering docker-proxy PIDs: $PROXY_PIDS"
+            kill -9 $PROXY_PIDS 2>/dev/null || true
+            sleep 2
+          fi
+
+          # Debug: show what's using port 80
+          echo "=== Port 80 status ==="
+          ss -tlnp 'sport = :80' 2>/dev/null || true
+          docker ps --filter "publish=80" 2>/dev/null || true
+
           # Prune unused networks
           docker network prune -f || true
 
