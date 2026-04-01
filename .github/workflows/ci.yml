@@ -70,3 +70,24 @@ jobs:
           cd docker-compose
           docker compose -f no-services.yml config --quiet
           echo "Docker Compose config is valid."
+
+  notify:
+    name: Notify Google Chat
+    runs-on: ubuntu-latest
+    needs: [lint-config, build-verify]
+    if: always()
+    steps:
+      - name: Send notification
+        run: |
+          STATUS="${{ needs.build-verify.result }}"
+          if [ "$STATUS" = "success" ]; then
+            ICON="✅"
+            MESSAGE="CI passed"
+          else
+            ICON="❌"
+            MESSAGE="CI failed (lint: ${{ needs.lint-config.result }}, build: ${{ needs.build-verify.result }})"
+          fi
+
+          curl -s -X POST "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"${ICON} *[MobiScan]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Triggered by: ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>\"}"
