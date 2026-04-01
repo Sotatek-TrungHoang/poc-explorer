@@ -24,9 +24,22 @@ Blockscout is an open-source alternative to centralized, closed source block exp
 
 Blockscout currently supports several hundred chains and rollups throughout the greater blockchain ecosystem. Ethereum, Cosmos, Polkadot, Avalanche, Near and many others include Blockscout integrations. A comprehensive list is available at [chains.blockscout.com](https://chains.blockscout.com). If your project is not listed, contact the team in [Discord](https://discord.com/invite/blockscout).
 
-## Getting Started
+## Developer Documentation
 
-See the [project documentation](https://docs.blockscout.com/) for instructions:
+### For Contributors & Maintainers
+
+Start here to understand the codebase and contribute:
+
+- **[Project Overview & PDR](./docs/project-overview-pdr.md)** — Project purpose, target users, key features, tech stack, requirements
+- **[Codebase Summary](./docs/codebase-summary.md)** — Umbrella architecture, 6 OTP apps, file structure, key modules
+- **[Code Standards](./docs/code-standards.md)** — Elixir conventions, naming patterns, module organization, testing, config patterns
+- **[System Architecture](./docs/system-architecture.md)** — High-level design, data flow, OTP supervision trees, database schema, APIs, L2 support
+- **[Project Roadmap](./docs/project-roadmap.md)** — Current version status, development phases, recent work, upcoming priorities
+- **[Deployment Guide](./docs/deployment-guide.md)** — Docker Compose, environment variables, Kubernetes, microservices, troubleshooting
+
+### For Users & Operators
+
+See the [project documentation](https://docs.blockscout.com/) for deployment instructions:
 
 - [Manual deployment](https://docs.blockscout.com/for-developers/deployment/manual-deployment-guide)
 - [Docker-compose deployment](https://docs.blockscout.com/for-developers/deployment/docker-compose-deployment)

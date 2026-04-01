@@ -26,22 +26,13 @@ services:
     extends:
       file: ./services/backend.yml
       service: backend
-    build:
-      context: ..
-      dockerfile: ./docker/Dockerfile
-      args:
-        API_V1_READ_METHODS_DISABLED: "false"
-        DISABLE_WEBAPP: "false"
-        API_V1_WRITE_METHODS_DISABLED: "false"
-        ADMIN_PANEL_ENABLED: ""
-        RELEASE_VERSION: 9.0.2
     links:
       - db:database
     environment:
-        ETHEREUM_JSONRPC_HTTP_URL: http://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_TRACE_URL: http://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_WS_URL: ws://host.docker.internal:8545/
-        CHAIN_ID: '1337'
+        ETHEREUM_JSONRPC_HTTP_URL: https://ethereum-sepolia-rpc.publicnode.com
+        ETHEREUM_JSONRPC_TRACE_URL: https://ethereum-sepolia-rpc.publicnode.com
+        ETHEREUM_JSONRPC_WS_URL: wss://ethereum-sepolia-rpc.publicnode.com
+        CHAIN_ID: '11155111'
 
   frontend:
     depends_on:
