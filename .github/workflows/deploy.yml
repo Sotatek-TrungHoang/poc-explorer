@@ -46,7 +46,12 @@ jobs:
       - name: Deploy containers
         run: |
           echo "=== Stopping existing containers ==="
-          docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 || true
+          docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 --remove-orphans || true
+
+          # Remove any leftover containers with conflicting names
+          for c in db backend frontend proxy redis-db; do
+            docker rm -f "$c" 2>/dev/null || true
+          done
 
           echo "=== Starting containers ==="
           docker compose -f ${{ env.COMPOSE_FILE }} up -d
