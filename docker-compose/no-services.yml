@@ -29,10 +29,10 @@ services:
     links:
       - db:database
     environment:
-        ETHEREUM_JSONRPC_HTTP_URL: https://ethereum-sepolia-rpc.publicnode.com
-        ETHEREUM_JSONRPC_TRACE_URL: https://ethereum-sepolia-rpc.publicnode.com
-        ETHEREUM_JSONRPC_WS_URL: wss://ethereum-sepolia-rpc.publicnode.com
-        CHAIN_ID: '11155111'
+        ETHEREUM_JSONRPC_HTTP_URL: https://rpc.poa-tracing.sotatek.works
+        ETHEREUM_JSONRPC_TRACE_URL: https://rpc.poa-tracing.sotatek.works
+        ETHEREUM_JSONRPC_WS_URL: wss://rpc.poa-tracing.sotatek.works
+        CHAIN_ID: '31337'
 
   frontend:
     depends_on:
