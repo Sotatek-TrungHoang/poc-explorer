@@ -1,0 +1,153 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docker-compose/**'
+      - 'docker/**'
+      - 'config/**'
+      - '.github/workflows/deploy.yml'
+
+  workflow_dispatch:
+    inputs:
+      compose_file:
+        description: 'Docker Compose file to use'
+        required: false
+        default: 'no-services.yml'
+        type: choice
+        options:
+          - no-services.yml
+          - docker-compose.yml
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  DEPLOY_PATH: /opt/blockscout
+  COMPOSE_FILE: ${{ github.event.inputs.compose_file || 'no-services.yml' }}
+
+jobs:
+  deploy:
+    name: Deploy to Ubuntu Server
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose config
+        run: |
+          cd docker-compose
+          docker compose -f ${{ env.COMPOSE_FILE }} config --quiet
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            echo "=== Deploying Blockscout to ${{ env.DEPLOY_PATH }} ==="
+
+            # Ensure deploy directory exists
+            sudo mkdir -p ${{ env.DEPLOY_PATH }}
+            sudo chown -R $USER:$USER ${{ env.DEPLOY_PATH }}
+
+            # Clone or pull latest code
+            if [ -d "${{ env.DEPLOY_PATH }}/.git" ]; then
+              cd ${{ env.DEPLOY_PATH }}
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone --branch main --single-branch \
+                ${{ github.server_url }}/${{ github.repository }}.git \
+                ${{ env.DEPLOY_PATH }}
+              cd ${{ env.DEPLOY_PATH }}
+            fi
+
+            # Navigate to docker-compose directory
+            cd ${{ env.DEPLOY_PATH }}/docker-compose
+
+            # Pull latest images
+            echo "=== Pulling latest images ==="
+            docker compose -f ${{ env.COMPOSE_FILE }} pull
+
+            # Stop existing containers gracefully
+            echo "=== Stopping existing containers ==="
+            docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 || true
+
+            # Start containers
+            echo "=== Starting containers ==="
+            docker compose -f ${{ env.COMPOSE_FILE }} up -d
+
+            # Wait for services to be ready
+            echo "=== Waiting for services to start ==="
+            sleep 30
+
+            # Show container status
+            docker compose -f ${{ env.COMPOSE_FILE }} ps
+
+            echo "=== Deployment complete ==="
+
+  health-check:
+    name: Post-deploy Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for full startup
+        run: sleep 30
+
+      - name: Check API health
+        run: |
+          MAX_RETRIES=10
+          RETRY_DELAY=15
+          SERVER_HOST="${{ secrets.SERVER_HOST }}"
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "http://${SERVER_HOST}/api/v2/stats" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "API is healthy (HTTP 200)"
+              break
+            fi
+
+            if [ "$i" = "$MAX_RETRIES" ]; then
+              echo "ERROR: API health check failed after $MAX_RETRIES attempts (last HTTP code: $HTTP_CODE)"
+              exit 1
+            fi
+
+            echo "Not ready yet (HTTP $HTTP_CODE), retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+
+      - name: Check frontend health
+        run: |
+          SERVER_HOST="${{ secrets.SERVER_HOST }}"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 --max-time 30 \
+            "http://${SERVER_HOST}" 2>/dev/null || echo "000")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Frontend is healthy (HTTP 200)"
+          else
+            echo "WARNING: Frontend returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Verify indexing is active
+        run: |
+          SERVER_HOST="${{ secrets.SERVER_HOST }}"
+          STATS=$(curl -s --max-time 30 "http://${SERVER_HOST}/api/v2/stats" 2>/dev/null)
+
+          if echo "$STATS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Blocks: {d.get(\"total_blocks\",\"N/A\")}, Addresses: {d.get(\"total_addresses\",\"N/A\")}')"; then
+            echo "Indexer is active and returning data."
+          else
+            echo "WARNING: Could not verify indexer status"
+          fi

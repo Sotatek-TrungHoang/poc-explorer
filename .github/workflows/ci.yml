@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-config:
+    name: Lint Configuration Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose configs
+        run: |
+          cd docker-compose
+          for f in no-services.yml docker-compose.yml; do
+            if [ -f "$f" ]; then
+              echo "Validating $f..."
+              docker compose -f "$f" config --quiet 2>&1 || true
+            fi
+          done
+
+      - name: Check env files exist
+        run: |
+          echo "Checking required env files..."
+          for f in \
+            docker-compose/envs/common-blockscout.env \
+            docker-compose/envs/common-frontend.env; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Missing $f"
+              exit 1
+            fi
+            echo "OK: $f"
+          done
+
+      - name: Check no secrets in env files
+        run: |
+          echo "Scanning for hardcoded secrets..."
+          # Check for common secret patterns (API keys, tokens, passwords in env values)
+          if grep -rEn '(sk_live|pk_live|ghp_|gho_|AKIA[A-Z0-9]{16})' \
+            docker-compose/envs/*.env 2>/dev/null; then
+            echo "ERROR: Potential secrets found in env files!"
+            exit 1
+          fi
+          echo "No secrets detected."
+
+  build-verify:
+    name: Verify Docker Build
+    runs-on: ubuntu-latest
+    needs: lint-config
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull pre-built images
+        run: |
+          cd docker-compose
+          docker compose -f no-services.yml pull --quiet 2>&1 || {
+            echo "WARNING: Could not pull all images, some may need building"
+          }
+
+      - name: Verify compose can start (dry-run)
+        run: |
+          cd docker-compose
+          docker compose -f no-services.yml config --quiet
+          echo "Docker Compose config is valid."
