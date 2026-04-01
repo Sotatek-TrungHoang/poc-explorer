@@ -92,7 +92,7 @@ msgstr ""
 #: lib/block_scout_web/templates/layout/_default_title.html.eex:2
 #: lib/block_scout_web/templates/layout/_default_title.html.eex:2
 #, elixir-autogen, elixir-format
-msgid "%{subnetwork} Explorer - BlockScout"
+msgid "%{subnetwork} Explorer - MobiScan"
 msgstr ""
 
 #: lib/block_scout_web/templates/withdrawal/index.html.eex:11
@@ -220,7 +220,7 @@ msgstr ""
 #: lib/block_scout_web/templates/api_docs/_metatags.html.eex:2
 #: lib/block_scout_web/templates/api_docs/_metatags.html.eex:2
 #, elixir-autogen, elixir-format
-msgid "API for the %{subnetwork} - BlockScout"
+msgid "API for the %{subnetwork} - MobiScan"
 msgstr ""
 
 #: lib/block_scout_web/templates/account/api_key/form.html.eex:7
@@ -708,7 +708,7 @@ msgstr ""
 #: lib/block_scout_web/templates/chain/_metatags.html.eex:4
 #: lib/block_scout_web/templates/chain/_metatags.html.eex:4
 #, elixir-autogen, elixir-format
-msgid "BlockScout provides analytics data, API, and Smart Contract tools for the %{subnetwork}"
+msgid "MobiScan provides analytics data, API, and Smart Contract tools for the %{subnetwork}"
 msgstr ""
 
 #: lib/block_scout_web/templates/layout/_topnav.html.eex:29
@@ -754,7 +754,7 @@ msgstr ""
 #: lib/block_scout_web/templates/layout/_footer.html.eex:22
 #: lib/block_scout_web/templates/layout/_footer.html.eex:22
 #, elixir-autogen, elixir-format
-msgid "Blockscout is a tool for inspecting and analyzing EVM based blockchains. Blockchain explorer for Ethereum Networks."
+msgid "MobiScan is a tool for inspecting and analyzing EVM based blockchains. Blockchain explorer for Ethereum Networks."
 msgstr ""
 
 #: lib/block_scout_web/templates/transaction_state/_state_change.html.eex:8
@@ -826,7 +826,7 @@ msgstr ""
 #: lib/block_scout_web/templates/layout/_footer.html.eex:43
 #: lib/block_scout_web/templates/layout/_footer.html.eex:43
 #, elixir-autogen, elixir-format
-msgid "Chat (#blockscout)"
+msgid "Chat (#mobiscan)"
 msgstr ""
 
 #: lib/block_scout_web/views/block_view.ex:65
@@ -1068,7 +1068,7 @@ msgstr ""
 #: lib/block_scout_web/templates/smart_contract/_functions.html.eex:11
 #: lib/block_scout_web/templates/smart_contract/_functions.html.eex:11
 #, elixir-autogen, elixir-format
-msgid "Contract is not verified. However, we found a verified contract with the same bytecode in Blockscout DB"
+msgid "Contract is not verified. However, we found a verified contract with the same bytecode in MobiScan DB"
 msgstr ""
 
 #: lib/block_scout_web/templates/verified_contracts/index.html.eex:47
@@ -3568,7 +3568,7 @@ msgstr ""
 #: lib/block_scout_web/templates/api_docs/index.html.eex:6
 #: lib/block_scout_web/templates/api_docs/index.html.eex:6
 #, elixir-autogen, elixir-format
-msgid "This API is provided for developers transitioning their applications from Etherscan to BlockScout. It supports GET and POST requests."
+msgid "This API is provided for developers transitioning their applications from Etherscan to MobiScan. It supports GET and POST requests."
 msgstr ""
 
 #: lib/block_scout_web/templates/api_docs/eth_rpc.html.eex:7
@@ -3598,7 +3598,7 @@ msgstr ""
 #: lib/block_scout_web/templates/api_docs/eth_rpc.html.eex:10
 #: lib/block_scout_web/templates/api_docs/eth_rpc.html.eex:10
 #, elixir-autogen, elixir-format
-msgid "This is useful to allow sending requests to blockscout without having to change anything about the request."
+msgid "This is useful to allow sending requests to MobiScan without having to change anything about the request."
 msgstr ""
 
 #: lib/block_scout_web/templates/page_not_found/index.html.eex:8

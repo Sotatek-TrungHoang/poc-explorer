@@ -22,7 +22,7 @@
             <div class="mb-4">
               <div style="display: inline-block;">
                 <%= render BlockScoutWeb.CommonComponentsView, "_info.html" %>
-                <span> <%= gettext("Contract is not verified. However, we found a verified contract with the same bytecode in Blockscout DB") %> <%= link(
+                <span> <%= gettext("Contract is not verified. However, we found a verified contract with the same bytecode in MobiScan DB") %> <%= link(
                   bytecode_twin_contract.address_hash,
                   to: address_contract_path(@conn, :index, bytecode_twin_contract.address_hash)) %>.<br/> <%= gettext("All metadata displayed below is from that contract. In order to verify current contract, click") %> <i><%= gettext("Verify & Publish") %></i> <%= gettext("button") %></span>
               </div>

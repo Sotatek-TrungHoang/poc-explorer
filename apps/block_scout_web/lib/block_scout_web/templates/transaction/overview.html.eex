@@ -207,7 +207,7 @@
                   <%= link(
                         @transaction.l1_block_number,
                         class: "transaction__link",
-                        to: "https://eth-goerli.blockscout.com/block/#{@transaction.l1_block_number}"
+                        to: "https://eth-goerli.mobiscan.io/block/#{@transaction.l1_block_number}"
                       ) %>
                 <% else %>
                   <%= formatted_result(status) %>

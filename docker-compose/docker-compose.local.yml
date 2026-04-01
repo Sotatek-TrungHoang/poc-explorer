@@ -1,0 +1,14 @@
+version: '3.9'
+
+# Override to build backend from local source using the old UI Dockerfile
+# Usage: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+services:
+  backend:
+    image: blockscout-oldui-local:latest
+    build:
+      context: ..
+      dockerfile: ./docker/oldUI.Dockerfile
+      args:
+        RELEASE_VERSION: 9.0.2
+    pull_policy: never

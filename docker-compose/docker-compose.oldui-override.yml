@@ -1,0 +1,25 @@
+version: '3.9'
+
+# Override file for running the old/classic Blockscout UI locally.
+# Builds backend from local source using oldUI.Dockerfile (DISABLE_WEBAPP=false).
+# Usage:
+#   cd docker-compose
+#   docker compose -f docker-compose.yml -f docker-compose.oldui-override.yml up --build backend db db-init redis-db
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: ./docker/oldUI.Dockerfile
+      args:
+        RELEASE_VERSION: 9.0.2
+    environment:
+      # Use a public testnet RPC so the app starts without a local node
+      ETHEREUM_JSONRPC_HTTP_URL: https://ethereum-sepolia-rpc.publicnode.com
+      ETHEREUM_JSONRPC_TRACE_URL: https://ethereum-sepolia-rpc.publicnode.com
+      ETHEREUM_JSONRPC_WS_URL: ""
+      CHAIN_ID: "11155111"
+      DISABLE_WEBAPP: "false"
+      PORT: "4000"
+    ports:
+      - "4000:4000"

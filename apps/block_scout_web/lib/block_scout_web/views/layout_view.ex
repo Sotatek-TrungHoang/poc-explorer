@@ -10,25 +10,25 @@ defmodule BlockScoutWeb.LayoutView do
   @default_other_networks [
     %{
       title: "POA",
-      url: "https://blockscout.com/poa/core"
+      url: "https://mobiscan.io/poa/core"
     },
     %{
       title: "Sokol",
-      url: "https://blockscout.com/poa/sokol",
+      url: "https://mobiscan.io/poa/sokol",
       test_net?: true
     },
     %{
       title: "Gnosis Chain",
-      url: "https://blockscout.com/xdai/mainnet"
+      url: "https://mobiscan.io/xdai/mainnet"
     },
     %{
       title: "Ethereum Classic",
-      url: "https://blockscout.com/etc/mainnet",
+      url: "https://mobiscan.io/etc/mainnet",
       other?: true
     },
     %{
       title: "RSK",
-      url: "https://blockscout.com/rsk/mainnet",
+      url: "https://mobiscan.io/rsk/mainnet",
       other?: true
     }
   ]
@@ -77,7 +77,7 @@ defmodule BlockScoutWeb.LayoutView do
       "elixir-version": "Elixir #{System.version()} Erlang/OTP #{System.otp_release()}",
       "os-version": "#{os_family} #{os_name}",
       "archive-node-type": Variant.get(),
-      "additional-information": "The issue happened at #{subnetwork_title()} Blockscout instance"
+      "additional-information": "The issue happened at #{subnetwork_title()} MobiScan instance"
     ]
 
     issue_url = "#{Application.get_env(:block_scout_web, :footer)[:github_link]}/issues/new"
@@ -106,7 +106,7 @@ defmodule BlockScoutWeb.LayoutView do
   end
 
   def release_link_from_version(version) do
-    repo = "https://github.com/blockscout/blockscout"
+    repo = "https://github.com/mobiscan/mobiscan"
 
     if String.contains?(version, "+commit.") do
       commit_hash =

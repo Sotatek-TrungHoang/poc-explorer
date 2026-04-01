@@ -17,10 +17,10 @@ defmodule BlockScoutWeb.Specs.Private do
         %Server{url: to_string(Helper.instance_url() |> URI.append_path("/api"))}
       ],
       info: %Info{
-        title: "Blockscout Private API",
+        title: "MobiScan Private API",
         version: to_string(Application.spec(:block_scout_web, :vsn)),
         contact: %Contact{
-          email: "info@blockscout.com"
+          email: "info@mobiscan.io"
         }
       },
       paths: Paths.from_routes(Specs.routes_with_prefix(AccountRouter, "/account")),

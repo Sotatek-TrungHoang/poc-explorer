@@ -70,7 +70,7 @@
       <input id="js-network-path" class="d-none" value="<%= Application.get_env(:block_scout_web, BlockScoutWeb.Endpoint)[:url][:path] %>" />
       <!-- -->
       <div class="alert alert-warning text-center mb-0 p-3">
-          <%= raw("The new Blockscout UI is now open source! Learn how to <a href='https://docs.blockscout.com/for-developers/deployment/frontend-migration' target='_blank'>deploy it here</a>") %>
+          <%= raw("The new MobiScan UI is now open source! Learn how to <a href='https://docs.mobiscan.io/for-developers/deployment/frontend-migration' target='_blank'>deploy it here</a>") %>
       </div>
       <% show_maintenance_alert = Application.get_env(:block_scout_web, BlockScoutWeb.Chain)[:show_maintenance_alert] %>
       <%= if show_maintenance_alert do %>

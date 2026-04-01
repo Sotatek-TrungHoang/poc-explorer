@@ -125,10 +125,10 @@ config :block_scout_web, BlockScoutWeb.Notifier,
 
 config :block_scout_web, :footer,
   logo: System.get_env("FOOTER_LOGO"),
-  chat_link: System.get_env("FOOTER_CHAT_LINK", "https://discord.gg/blockscout"),
-  github_link: System.get_env("FOOTER_GITHUB_LINK", "https://github.com/blockscout/blockscout"),
+  chat_link: System.get_env("FOOTER_CHAT_LINK", "https://discord.gg/mobiscan"),
+  github_link: System.get_env("FOOTER_GITHUB_LINK", "https://github.com/mobiscan/mobiscan"),
   forum_link_enabled: ConfigHelper.parse_bool_env_var("FOOTER_FORUM_LINK_ENABLED"),
-  forum_link: System.get_env("FOOTER_FORUM_LINK", "https://forum.poa.network/c/blockscout"),
+  forum_link: System.get_env("FOOTER_FORUM_LINK", "https://forum.mobiscan.io"),
   telegram_link_enabled: ConfigHelper.parse_bool_env_var("FOOTER_TELEGRAM_LINK_ENABLED"),
   telegram_link: System.get_env("FOOTER_TELEGRAM_LINK"),
   link_to_other_explorers: ConfigHelper.parse_bool_env_var("FOOTER_LINK_TO_OTHER_EXPLORERS"),
@@ -750,7 +750,7 @@ config :explorer, Explorer.Account,
   watchlist_addresses_limit: ConfigHelper.parse_integer_env_var("ACCOUNT_WATCHLIST_ADDRESSES_LIMIT", 15),
   notifications_limit_for_30_days:
     ConfigHelper.parse_integer_env_var("ACCOUNT_WATCHLIST_NOTIFICATIONS_LIMIT_FOR_30_DAYS", 1_000),
-  siwe_message: System.get_env("ACCOUNT_SIWE_MESSAGE", "Sign in to Blockscout Account V2")
+  siwe_message: System.get_env("ACCOUNT_SIWE_MESSAGE", "Sign in to MobiScan Account")
 
 config :explorer, Explorer.Chain.Cache.MinMissingBlockNumber,
   enabled: !disable_indexer?,
@@ -1732,7 +1732,7 @@ config :libcluster,
       strategy: Cluster.Strategy.Kubernetes.DNS,
       config: [
         service: System.get_env("K8S_SERVICE"),
-        application_name: "blockscout"
+        application_name: "mobiscan"
       ]
     ]
   ]
