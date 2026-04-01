@@ -4,8 +4,8 @@
     "url": "git+https://github.com/blockscout/blockscout.git"
   },
   "private": true,
-  "name": "blockscout",
-  "author": "Blockscout",
+  "name": "mobichain",
+  "author": "MobiChain",
   "license": "GPL-3.0",
   "engines": {
     "node": ">=16.0.0",
