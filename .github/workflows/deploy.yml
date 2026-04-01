@@ -47,6 +47,17 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Write production environment overrides
+        run: |
+          echo "CORS_ALLOWED_ORIGIN=https://scan.poa-tracing.sotatek.works" > .env
+          echo "NEXT_PUBLIC_API_HOST=scan.poa-tracing.sotatek.works" >> .env
+          echo "NEXT_PUBLIC_API_PROTOCOL=https" >> .env
+          echo "NEXT_PUBLIC_STATS_API_HOST=https://scan.poa-tracing.sotatek.works:8080" >> .env
+          echo "NEXT_PUBLIC_APP_HOST=scan.poa-tracing.sotatek.works" >> .env
+          echo "NEXT_PUBLIC_APP_PROTOCOL=https" >> .env
+          echo "NEXT_PUBLIC_VISUALIZE_API_HOST=https://scan.poa-tracing.sotatek.works:8081" >> .env
+          echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=wss" >> .env
+
       - name: Pull latest Docker images
         run: |
           echo "=== Pulling latest images ==="
