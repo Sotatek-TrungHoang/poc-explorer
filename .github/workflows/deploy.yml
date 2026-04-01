@@ -70,6 +70,14 @@ jobs:
             docker rm $PORT80_CONTAINERS || true
           fi
 
+          # Kill any non-Docker process using port 80 (e.g. host nginx/apache)
+          PORT80_PID=$(ss -tlnp 'sport = :80' 2>/dev/null | grep -oP 'pid=\K[0-9]+' | head -1)
+          if [ -n "$PORT80_PID" ]; then
+            echo "Killing process $PORT80_PID using port 80"
+            kill -9 "$PORT80_PID" 2>/dev/null || true
+            sleep 2
+          fi
+
           # Prune unused networks
           docker network prune -f || true
 
