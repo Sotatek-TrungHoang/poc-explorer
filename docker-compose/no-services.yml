@@ -41,7 +41,12 @@ services:
       file: ./services/frontend.yml
       service: frontend
     environment:
-      NEXT_PUBLIC_STATS_API_HOST:
+      NEXT_PUBLIC_API_HOST: ${NEXT_PUBLIC_API_HOST:-localhost}
+      NEXT_PUBLIC_API_PROTOCOL: ${NEXT_PUBLIC_API_PROTOCOL:-http}
+      NEXT_PUBLIC_APP_HOST: ${NEXT_PUBLIC_APP_HOST:-localhost}
+      NEXT_PUBLIC_APP_PROTOCOL: ${NEXT_PUBLIC_APP_PROTOCOL:-http}
+      NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL: ${NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL:-ws}
+      NEXT_PUBLIC_STATS_API_HOST: ${NEXT_PUBLIC_STATS_API_HOST:-}
 
   proxy:
     depends_on:
