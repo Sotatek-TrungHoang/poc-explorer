@@ -25,7 +25,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DEPLOY_PATH: /opt/blockscout
   COMPOSE_FILE: ${{ github.event.inputs.compose_file || 'no-services.yml' }}
 
 jobs:
@@ -33,35 +32,19 @@ jobs:
     name: Deploy Blockscout
     runs-on: self-hosted
     environment: production
+    defaults:
+      run:
+        working-directory: docker-compose
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sync code to deploy path
-        run: |
-          set -e
-          echo "=== Syncing code to ${{ env.DEPLOY_PATH }} ==="
-
-          # Ensure deploy directory exists
-          sudo mkdir -p ${{ env.DEPLOY_PATH }}
-          sudo chown -R $USER:$USER ${{ env.DEPLOY_PATH }}
-
-          # Sync repo files to deploy path (exclude .git for clean copy)
-          rsync -a --delete \
-            --exclude '.git' \
-            --exclude 'docker-compose/blockscout-db-data' \
-            --exclude 'docker-compose/logs' \
-            --exclude 'docker-compose/dets' \
-            ${{ github.workspace }}/ ${{ env.DEPLOY_PATH }}/
-
       - name: Pull latest Docker images
         run: |
-          cd ${{ env.DEPLOY_PATH }}/docker-compose
           echo "=== Pulling latest images ==="
           docker compose -f ${{ env.COMPOSE_FILE }} pull
 
       - name: Deploy containers
         run: |
-          cd ${{ env.DEPLOY_PATH }}/docker-compose
           echo "=== Stopping existing containers ==="
           docker compose -f ${{ env.COMPOSE_FILE }} down --timeout 60 || true
 
@@ -75,6 +58,7 @@ jobs:
           docker compose -f ${{ env.COMPOSE_FILE }} ps
 
       - name: Cleanup old Docker images
+        working-directory: .
         run: docker image prune -f || true
 
   health-check:
