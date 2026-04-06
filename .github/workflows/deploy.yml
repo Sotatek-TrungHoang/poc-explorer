@@ -48,6 +48,27 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Free disk space for Docker build
+        working-directory: .
+        run: |
+          echo "=== Disk usage before cleanup ==="
+          df -h /tmp / | head -5
+
+          echo "=== Pruning Docker build cache ==="
+          docker builder prune -f --keep-storage=2GB || true
+
+          echo "=== Removing dangling images ==="
+          docker image prune -f || true
+
+          echo "=== Removing unused volumes ==="
+          docker volume prune -f || true
+
+          echo "=== Cleaning /tmp compose metadata files ==="
+          rm -f /tmp/.tmp-compose-build-metadataFile-* || true
+
+          echo "=== Disk usage after cleanup ==="
+          df -h /tmp / | head -5
+
       - name: Write production environment overrides
         run: |
           echo "CORS_ALLOWED_ORIGIN=${{ secrets.CORS_ALLOWED_ORIGIN }}" > .env
@@ -89,9 +110,20 @@ jobs:
           echo "=== Container status ==="
           docker compose -f ${{ env.COMPOSE_FILE }} ps
 
-      - name: Cleanup old Docker images
+      - name: Cleanup old Docker artifacts
         working-directory: .
-        run: docker image prune -f || true
+        run: |
+          echo "=== Removing dangling images ==="
+          docker image prune -f || true
+
+          echo "=== Pruning build cache (keep 2GB) ==="
+          docker builder prune -f --keep-storage=2GB || true
+
+          echo "=== Cleaning temp metadata files ==="
+          rm -f /tmp/.tmp-compose-build-metadataFile-* || true
+
+          echo "=== Final disk usage ==="
+          df -h /tmp / | head -5
 
   health-check:
     name: Post-deploy Health Check
