@@ -52,22 +52,16 @@ jobs:
         working-directory: .
         run: |
           echo "=== Disk usage before cleanup ==="
-          df -h /tmp / | head -5
+          df -h /tmp / 2>/dev/null || df -h
 
-          echo "=== Pruning Docker build cache ==="
-          docker builder prune -f --keep-storage=2GB || true
+          echo "=== Full Docker system prune (unused images, networks, cache) ==="
+          docker system prune -af --volumes || true
 
-          echo "=== Removing dangling images ==="
-          docker image prune -f || true
-
-          echo "=== Removing unused volumes ==="
-          docker volume prune -f || true
-
-          echo "=== Cleaning /tmp compose metadata files ==="
-          rm -f /tmp/.tmp-compose-build-metadataFile-* || true
+          echo "=== Cleaning all /tmp Docker and compose artifacts ==="
+          rm -rf /tmp/.tmp-compose-build-* /tmp/docker-* /tmp/buildkit* 2>/dev/null || true
 
           echo "=== Disk usage after cleanup ==="
-          df -h /tmp / | head -5
+          df -h /tmp / 2>/dev/null || df -h
 
       - name: Write production environment overrides
         run: |
@@ -79,12 +73,18 @@ jobs:
           echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=${{ secrets.NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL }}" >> .env
 
       - name: Build frontend and pull other images
+        env:
+          TMPDIR: ${{ github.workspace }}/tmp
         run: |
+          mkdir -p "$TMPDIR"
+
           echo "=== Building custom frontend image ==="
           docker compose -f ${{ env.COMPOSE_FILE }} build frontend
 
           echo "=== Pulling remaining images ==="
           docker compose -f ${{ env.COMPOSE_FILE }} pull --ignore-buildable
+
+          rm -rf "$TMPDIR"
 
       - name: Stop and clean existing deployment
         run: |
@@ -113,17 +113,9 @@ jobs:
       - name: Cleanup old Docker artifacts
         working-directory: .
         run: |
-          echo "=== Removing dangling images ==="
           docker image prune -f || true
-
-          echo "=== Pruning build cache (keep 2GB) ==="
           docker builder prune -f --keep-storage=2GB || true
-
-          echo "=== Cleaning temp metadata files ==="
-          rm -f /tmp/.tmp-compose-build-metadataFile-* || true
-
-          echo "=== Final disk usage ==="
-          df -h /tmp / | head -5
+          rm -rf /tmp/.tmp-compose-build-* ${{ github.workspace }}/tmp 2>/dev/null || true
 
   health-check:
     name: Post-deploy Health Check
