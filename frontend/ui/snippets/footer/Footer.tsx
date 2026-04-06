@@ -41,7 +41,7 @@ const Footer = () => {
       icon: 'docs' as const,
       iconSize: '20px',
       text: 'Docs',
-      url: 'https://docs.mobichain.io',
+      url: '#',
     },
   ].filter(Boolean);
 
@@ -98,16 +98,6 @@ const Footer = () => {
           MobiChain Explorer is a tool for inspecting and analyzing MobiChain blockchain transactions and smart contracts.
         </Text>
         <Box mt={ 6 } alignItems="start" textStyle="xs">
-          { apiVersionUrl && (
-            <Text>
-              Backend: <Link href={ apiVersionUrl } external noIcon>{ backendVersionData?.backend_version }</Link>
-            </Text>
-          ) }
-          { frontendLink && (
-            <Text>
-              Frontend: { frontendLink }
-            </Text>
-          ) }
           <Text>
             Copyright { copy } MobiChain { (new Date()).getFullYear() }
           </Text>
