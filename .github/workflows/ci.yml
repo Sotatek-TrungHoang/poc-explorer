@@ -58,10 +58,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull pre-built images
+      - name: Build frontend and pull other images
         run: |
           cd docker-compose
-          docker compose -f no-services.yml pull --quiet 2>&1 || {
+          echo "=== Building custom frontend image ==="
+          docker compose -f no-services.yml build frontend
+          echo "=== Pulling remaining images ==="
+          docker compose -f no-services.yml pull --ignore-buildable --quiet 2>&1 || {
             echo "WARNING: Could not pull all images, some may need building"
           }
 
@@ -90,4 +93,4 @@ jobs:
 
           curl -s -X POST "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"${ICON} *[MobiScan]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Triggered by: ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>\"}"
+            -d "{\"text\": \"${ICON} *[MobiChain Explorer]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Triggered by: ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>\"}"

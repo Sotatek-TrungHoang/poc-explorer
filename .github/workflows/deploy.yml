@@ -7,6 +7,7 @@ on:
       - 'docker-compose/**'
       - 'docker/**'
       - 'config/**'
+      - 'frontend/**'
       - '.github/workflows/deploy.yml'
 
   workflow_dispatch:
@@ -29,7 +30,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy Blockscout
+    name: Deploy MobiChain Explorer
     runs-on: self-hosted
     environment: production
     defaults:
@@ -56,10 +57,13 @@ jobs:
           echo "NEXT_PUBLIC_APP_PROTOCOL=${{ secrets.NEXT_PUBLIC_APP_PROTOCOL }}" >> .env
           echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=${{ secrets.NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL }}" >> .env
 
-      - name: Pull latest Docker images
+      - name: Build frontend and pull other images
         run: |
-          echo "=== Pulling latest images ==="
-          docker compose -f ${{ env.COMPOSE_FILE }} pull
+          echo "=== Building custom frontend image ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} build frontend
+
+          echo "=== Pulling remaining images ==="
+          docker compose -f ${{ env.COMPOSE_FILE }} pull --ignore-buildable
 
       - name: Stop and clean existing deployment
         run: |
@@ -174,4 +178,4 @@ jobs:
 
           curl -s -X POST "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"${ICON} *[MobiScan]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Commit: \`${COMMIT_SHORT}\` — ${COMMIT_MSG}\n• Compose: \`${{ env.COMPOSE_FILE }}\`\n• Triggered by: ${{ github.actor }}\n• <${COMMIT_URL}|View commit> · <${RUN_URL}|View CI logs> · <${REPO_URL}|GitHub>\"}"
+            -d "{\"text\": \"${ICON} *[MobiChain Explorer]* ${MESSAGE}\n• Branch: \`${{ github.ref_name }}\`\n• Commit: \`${COMMIT_SHORT}\` — ${COMMIT_MSG}\n• Compose: \`${{ env.COMPOSE_FILE }}\`\n• Triggered by: ${{ github.actor }}\n• <${COMMIT_URL}|View commit> · <${RUN_URL}|View CI logs> · <${REPO_URL}|GitHub>\"}"
