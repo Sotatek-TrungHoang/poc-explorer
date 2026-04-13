@@ -11,7 +11,7 @@ import { chains, parentChain } from 'lib/web3/chains';
 
 const feature = appConfig.features.blockchainInteraction;
 
-const getChainTransportFromConfig = (config: Partial<typeof appConfig> | undefined, readOnly?: boolean): Record<string, Transport> => {
+const getChainTransportFromConfig = (config: Partial<typeof appConfig> | undefined): Record<string, Transport> => {
   if (!config?.chain?.id) {
     return {};
   }
@@ -19,14 +19,14 @@ const getChainTransportFromConfig = (config: Partial<typeof appConfig> | undefin
   return {
     [config.chain.id]: fallback(
       config.chain.rpcUrls
-        .concat(readOnly && config.apis?.general ? `${ config.apis.general.endpoint }${ config.apis.general.basePath ?? '' }/api/eth-rpc` : '')
+        .concat(config.apis?.general ? `${ config.apis.general.endpoint }${ config.apis.general.basePath ?? '' }/api/eth-rpc` : '')
         .filter(Boolean)
         .map((url) => http(url, { batch: { wait: 100, batchSize: 5 } })),
     ),
   };
 };
 
-const reduceExternalChainsToTransportConfig = (readOnly: boolean): Record<string, Transport> => {
+const reduceExternalChainsToTransportConfig = (): Record<string, Transport> => {
   const multichain = multichainConfig();
   const essentialDapps = essentialDappsChainsConfig();
   const chains = [ ...(multichain?.chains ?? []), ...(essentialDapps?.chains ?? []) ].filter(Boolean);
@@ -36,7 +36,7 @@ const reduceExternalChainsToTransportConfig = (readOnly: boolean): Record<string
   }
 
   return chains
-    .map(({ app_config: config }) => getChainTransportFromConfig(config, readOnly))
+    .map(({ app_config: config }) => getChainTransportFromConfig(config))
     .reduce((result, item) => {
       Object.entries(item).map(([ id, transport ]) => {
         result[id] = transport;
@@ -51,9 +51,9 @@ const wagmi = (() => {
     const wagmiConfig = createConfig({
       chains: chains as [Chain, ...Array<Chain>],
       transports: {
-        ...getChainTransportFromConfig(appConfig, true),
+        ...getChainTransportFromConfig(appConfig),
         ...(parentChain ? { [parentChain.id]: http(parentChain.rpcUrls.default.http[0]) } : {}),
-        ...reduceExternalChainsToTransportConfig(true),
+        ...reduceExternalChainsToTransportConfig(),
       },
       ssr: true,
       batch: { multicall: { wait: 100, batchSize: 5 } },
@@ -67,9 +67,9 @@ const wagmi = (() => {
     networks: chains as Array<AppKitNetwork>,
     multiInjectedProviderDiscovery: true,
     transports: {
-      ...getChainTransportFromConfig(appConfig, false),
+      ...getChainTransportFromConfig(appConfig),
       ...(parentChain ? { [parentChain.id]: http() } : {}),
-      ...reduceExternalChainsToTransportConfig(false),
+      ...reduceExternalChainsToTransportConfig(),
     },
     projectId: feature.reown.projectId,
     ssr: true,

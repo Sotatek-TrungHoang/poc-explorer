@@ -12,6 +12,7 @@ services:
       BACK_PROXY_PASS: ${BACK_PROXY_PASS:-http://backend:4000}
       FRONT_PROXY_PASS: ${FRONT_PROXY_PASS:-http://frontend:3000}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
+      RPC_PROXY_PASS: ${RPC_PROXY_PASS:-https://rpc.poa-tracing.sotatek.works}
     ports:
       - target: 80
         published: 80
