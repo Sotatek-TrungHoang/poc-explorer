@@ -40,10 +40,24 @@ jobs:
       - name: Fix workspace permissions
         working-directory: .
         run: |
-          # Fix all root-owned files/dirs created by Docker operations (volumes, envsubst, etc.)
-          # that block git checkout from cleaning/recreating the workspace
+          # Docker operations create root-owned files/dirs that block git checkout.
+          # Must change OWNERSHIP (not just permissions) back to runner user.
+          # Three methods tried in order — at least one must succeed.
+
+          # Method 1: sudo chown (fastest, works if runner has passwordless sudo)
+          sudo chown -R "$(id -u):$(id -g)" "${{ github.workspace }}" 2>/dev/null || true
+
+          # Method 2: Docker container runs as root to chown back to host user
           docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-            sh -c "chmod -R 777 /workspace" || true
+            sh -c "chown -R $(id -u):$(id -g) /workspace" 2>/dev/null || true
+
+          # Method 3: Force-remove the problematic directory if chown failed
+          if [ ! -w "${{ github.workspace }}/docker-compose" ] 2>/dev/null; then
+            echo "WARNING: docker-compose/ still not writable, force-removing"
+            sudo rm -rf "${{ github.workspace }}/docker-compose" 2>/dev/null || \
+            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              sh -c "rm -rf /workspace/docker-compose" 2>/dev/null || true
+          fi
 
       - uses: actions/checkout@v4
 
