@@ -71,6 +71,7 @@ jobs:
           echo "NEXT_PUBLIC_APP_HOST=${{ secrets.NEXT_PUBLIC_APP_HOST }}" >> .env
           echo "NEXT_PUBLIC_APP_PROTOCOL=${{ secrets.NEXT_PUBLIC_APP_PROTOCOL }}" >> .env
           echo "NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL=${{ secrets.NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL }}" >> .env
+          echo "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=${{ secrets.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID }}" >> .env
 
       - name: Build frontend and pull other images
         env:
