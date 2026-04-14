@@ -82,8 +82,8 @@ jobs:
           echo "=== Disk usage before cleanup ==="
           df -h /tmp / 2>/dev/null || df -h
 
-          echo "=== Full Docker system prune (unused images, networks, cache) ==="
-          docker system prune -af --volumes || true
+          echo "=== Docker system prune (unused images, networks, cache — preserving volumes) ==="
+          docker system prune -af || true
 
           echo "=== Cleaning all /tmp Docker and compose artifacts ==="
           rm -rf /tmp/.tmp-compose-build-* /tmp/docker-* /tmp/buildkit* 2>/dev/null || true

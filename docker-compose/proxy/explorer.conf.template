@@ -43,6 +43,11 @@ server {
         proxy_set_header      Upgrade "$http_upgrade";
         proxy_set_header      Connection $connection_upgrade;
         proxy_cache_bypass    $http_upgrade;
+
+        # Prevent "upstream sent too big header" on large API responses
+        proxy_buffer_size          16k;
+        proxy_buffers              4 16k;
+        proxy_busy_buffers_size    16k;
     }
     location / {
         proxy_pass            ${FRONT_PROXY_PASS};
@@ -54,5 +59,11 @@ server {
         proxy_set_header      Upgrade "$http_upgrade";
         proxy_set_header      Connection $connection_upgrade;
         proxy_cache_bypass    $http_upgrade;
+
+        # Next.js sends large response headers (cookies, CSP, etc.)
+        # Default 4k/8k buffers cause "upstream sent too big header" 502 errors
+        proxy_buffer_size          16k;
+        proxy_buffers              4 16k;
+        proxy_busy_buffers_size    16k;
     }
 }
