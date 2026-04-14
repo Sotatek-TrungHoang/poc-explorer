@@ -41,22 +41,37 @@ jobs:
         working-directory: .
         run: |
           # Docker operations create root-owned files/dirs that block git checkout.
-          # Must change OWNERSHIP (not just permissions) back to runner user.
-          # Three methods tried in order — at least one must succeed.
+          # Must reclaim ownership before actions/checkout can write files.
 
-          # Method 1: sudo chown (fastest, works if runner has passwordless sudo)
-          sudo chown -R "$(id -u):$(id -g)" "${{ github.workspace }}" 2>/dev/null || true
+          echo "=== Current workspace ownership ==="
+          ls -la "${{ github.workspace }}/" 2>/dev/null || true
 
-          # Method 2: Docker container runs as root to chown back to host user
-          docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-            sh -c "chown -R $(id -u):$(id -g) /workspace" 2>/dev/null || true
+          # Method 1: sudo chown (fastest)
+          if sudo chown -R "$(id -u):$(id -g)" "${{ github.workspace }}" 2>/dev/null; then
+            echo "✓ chown via sudo succeeded"
+          else
+            echo "⚠ sudo chown failed, trying Docker method..."
+            # Method 2: Docker container runs as root to chown
+            if docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+              sh -c "chown -R $(id -u):$(id -g) /workspace" 2>/dev/null; then
+              echo "✓ chown via Docker succeeded"
+            else
+              echo "⚠ Docker chown failed, force-removing workspace contents..."
+              # Method 3: Nuclear option — wipe everything so checkout starts fresh
+              sudo rm -rf "${{ github.workspace }}"/* "${{ github.workspace }}"/.[!.]* 2>/dev/null || \
+              docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
+                sh -c "rm -rf /workspace/* /workspace/.[!.]*" 2>/dev/null || true
+              echo "✓ Workspace wiped for fresh checkout"
+            fi
+          fi
 
-          # Method 3: Force-remove the problematic directory if chown failed
-          if [ ! -w "${{ github.workspace }}/docker-compose" ] 2>/dev/null; then
-            echo "WARNING: docker-compose/ still not writable, force-removing"
-            sudo rm -rf "${{ github.workspace }}/docker-compose" 2>/dev/null || \
-            docker run --rm -v "${{ github.workspace }}:/workspace" alpine \
-              sh -c "rm -rf /workspace/docker-compose" 2>/dev/null || true
+          # Verify the workspace is writable
+          if touch "${{ github.workspace }}/.permission-test" 2>/dev/null; then
+            rm -f "${{ github.workspace }}/.permission-test"
+            echo "✓ Workspace is writable"
+          else
+            echo "✗ ERROR: Workspace still not writable after all fix attempts"
+            exit 1
           fi
 
       - uses: actions/checkout@v4
